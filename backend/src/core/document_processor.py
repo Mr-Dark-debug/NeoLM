@@ -1,7 +1,7 @@
 import os
 import asyncio
 import mimetypes
-from typing import List
+from typing import List, Dict, Any
 from docling.document_converter import DocumentConverter
 from moviepy.editor import VideoFileClip
 import aiohttp
@@ -11,7 +11,6 @@ from urllib.parse import urlparse
 from src.core.config import Config
 from src.utils.logging import logger
 from pydantic import BaseModel
-from typing import Dict, Any
 
 class ProcessingResult(BaseModel):
     success: bool
@@ -36,6 +35,22 @@ class DocumentProcessor:
         tasks = [self.process_file(path) for path in file_paths]
         return await asyncio.gather(*tasks)
 
+    def _is_supported_file_type(self, mime_type: str) -> bool:
+        supported_types = {
+            "text/plain", "text/csv", "text/markdown",
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "audio/mpeg", "audio/wav",
+            "video/mp4", "video/x-msvideo",
+            "image/jpeg", "image/png", "image/gif"
+        }
+        return mime_type in supported_types or mime_type.startswith(("audio/", "video/", "image/"))
+
     async def process_file(self, file_path: str) -> ProcessingResult:
         try:
             if urlparse(file_path).scheme in ("http", "https"):
@@ -51,6 +66,9 @@ class DocumentProcessor:
             if not mime_type:
                 return ProcessingResult(success=False, content="", error_message=f"Unknown file type: {file_path}")
             
+            if not self._is_supported_file_type(mime_type):
+                return ProcessingResult(success=False, content="", error_message=f"Unsupported file type: {mime_type}")
+            
             logger.info(f"Processing {file_path} ({mime_type})")
             if mime_type.startswith("audio/"):
                 return await self._process_audio(file_path)
@@ -58,6 +76,15 @@ class DocumentProcessor:
                 return await self._process_video(file_path)
             elif mime_type.startswith("image/"):
                 return await self._process_image(file_path)
+            elif mime_type == "text/plain":
+                # Handle plain text directly
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                return ProcessingResult(
+                    success=True,
+                    content=content,
+                    metadata={"type": "text", "path": file_path}
+                )
             else:
                 return self._process_document(file_path)
         except Exception as e:
@@ -66,6 +93,25 @@ class DocumentProcessor:
 
     def _process_document(self, file_path: str) -> ProcessingResult:
         try:
+            mime_type = self._get_mime_type(file_path)
+            if mime_type in ("application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation"):
+                try:
+                    from pptx import Presentation
+                    prs = Presentation(file_path)
+                    text = []
+                    for slide in prs.slides:
+                        for shape in slide.shapes:
+                            if hasattr(shape, "text"):
+                                text.append(shape.text)
+                    content = "\n".join(text)
+                    return ProcessingResult(
+                        success=True,
+                        content=content,
+                        metadata={"type": "presentation", "path": file_path}
+                    )
+                except ImportError:
+                    return ProcessingResult(success=False, content="", error_message="PPTX processing requires python-pptx library")
+            
             result = self.converter.convert(file_path)
             return ProcessingResult(
                 success=True,
@@ -148,8 +194,8 @@ class DocumentProcessor:
             return ProcessingResult(success=False, content="", error_message=f"Image processing error: {str(e)}")
 
     def _check_file_size(self, file_path: str) -> bool:
-        if not os.path.isfile(file_path):
-            return True
+        if not os.path.exists(file_path):
+            return False
         return os.path.getsize(file_path) <= Config.MAX_FILE_SIZE
 
     def _get_mime_type(self, file_path: str) -> str:
@@ -157,9 +203,24 @@ class DocumentProcessor:
         if mime_type is None:
             ext = os.path.splitext(file_path)[1].lower()
             mime_map = {
-                ".txt": "text/plain", ".mp3": "audio/mpeg", ".wav": "audio/wav",
-                ".mp4": "video/mp4", ".avi": "video/x-msvideo", ".jpg": "image/jpeg",
-                ".png": "image/png", ".gif": "image/gif"
+                ".txt": "text/plain",
+                ".md": "text/markdown",
+                ".mp3": "audio/mpeg",
+                ".wav": "audio/wav",
+                ".mp4": "video/mp4",
+                ".avi": "video/x-msvideo",
+                ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg",
+                ".png": "image/png",
+                ".gif": "image/gif",
+                ".pdf": "application/pdf",
+                ".csv": "text/csv",
+                ".doc": "application/msword",
+                ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                ".ppt": "application/vnd.ms-powerpoint",
+                ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                ".xls": "application/vnd.ms-excel",
+                ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             }
             mime_type = mime_map.get(ext)
         return mime_type

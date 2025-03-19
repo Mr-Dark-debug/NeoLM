@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import NotebookModal from '../components/notebook/NotebookModal';
 
 interface Notebook {
@@ -13,25 +14,142 @@ interface Notebook {
   sources: number;
 }
 
+interface NotebookCardProps {
+  notebook: Notebook;
+  onDelete: (id: string) => Promise<void>;
+}
+
+function NotebookCard({ notebook, onDelete }: NotebookCardProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleOpenChat = () => {
+    router.push(`/notebook/${notebook.id}`);
+  };
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (confirm(`Are you sure you want to delete "${notebook.title}"?`)) {
+      await onDelete(notebook.id);
+    }
+    
+    setIsMenuOpen(false);
+  };
+
+  return (
+    <Link href={`/notebook/${notebook.id}`} className="block">
+      <div className="bg-white rounded-lg border p-6 hover:shadow-md transition-shadow">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <div className="w-10 h-10 flex items-center justify-center mr-4 bg-gray-100 rounded-lg">
+              <img 
+                src={notebook.icon} 
+                alt=""
+                className="w-6 h-6" 
+                onError={(e) => {
+                  // Fallback for missing icons
+                  const target = e.target as HTMLImageElement;
+                  target.src = '/icons/document.svg';
+                }}
+              />
+            </div>
+            <div>
+              <h3 className="font-medium">{notebook.title}</h3>
+              <div className="flex items-center text-gray-500 text-sm">
+                <span>{notebook.date}</span>
+                <span className="mx-2">•</span>
+                <span>{notebook.sources} sources</span>
+              </div>
+            </div>
+          </div>
+          <div className="relative" ref={menuRef}>
+            <button 
+              className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsMenuOpen(!isMenuOpen);
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="1"></circle>
+                <circle cx="12" cy="5" r="1"></circle>
+                <circle cx="12" cy="19" r="1"></circle>
+              </svg>
+            </button>
+            {isMenuOpen && (
+              <div className="absolute right-0 mt-2 py-2 w-48 bg-white rounded-md shadow-lg border z-10">
+                <button
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleOpenChat();
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  Open Chat
+                </button>
+                <button
+                  className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
+                  onClick={handleDelete}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 export default function Dashboard() {
   const [notebooks, setNotebooks] = useState<Notebook[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchNotebooks = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const response = await fetch('/api/notebooks');
-      if (response.ok) {
-        const data = await response.json();
-        setNotebooks(data);
-      } else {
-        setError(response.statusText);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch notebooks: ${response.status}`);
       }
+      
+      const data = await response.json();
+      setNotebooks(Array.isArray(data) ? data : []);
     } catch (error) {
-      setError('Error fetching notebooks');
+      console.error('Error fetching notebooks:', error);
+      setError('Failed to load notebooks. Please try again later.');
     } finally {
       setIsLoading(false);
     }
@@ -46,10 +164,29 @@ export default function Dashboard() {
     setIsModalOpen(true);
   };
 
-  const handleModalClose = () => {
+  const handleModalClose = (refreshList = false) => {
     setIsModalOpen(false);
-    // Refresh notebooks list after modal closes
-    fetchNotebooks();
+    if (refreshList) {
+      fetchNotebooks();
+    }
+  };
+
+  const handleDeleteNotebook = async (id: string) => {
+    try {
+      const response = await fetch(`/api/notebooks/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete notebook');
+      }
+      
+      // Refresh the notebooks list
+      fetchNotebooks();
+    } catch (error) {
+      console.error('Error deleting notebook:', error);
+      alert('Failed to delete notebook. Please try again.');
+    }
   };
 
   return (
@@ -115,39 +252,11 @@ export default function Dashboard() {
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {notebooks.map((notebook) => (
-            <Link 
-              href={`/notebook/${notebook.id}`} 
-              key={notebook.id}
-              className="bg-gray-50 hover:bg-gray-100 rounded-lg p-6 transition-colors"
-            >
-              <div className="relative flex justify-between">
-                <div className="w-12 h-12 flex items-center justify-center">
-                  <img 
-                    src={notebook.icon} 
-                    alt=""
-                    className="w-8 h-8" 
-                    onError={(e) => {
-                      // Fallback for missing icons
-                      const target = e.target as HTMLImageElement;
-                      target.src = '/icons/document.svg';
-                    }}
-                  />
-                </div>
-                <button className="text-gray-400 hover:text-gray-600">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="1"></circle>
-                    <circle cx="19" cy="12" r="1"></circle>
-                    <circle cx="5" cy="12" r="1"></circle>
-                  </svg>
-                </button>
-              </div>
-              <h3 className="text-xl font-semibold mt-4">{notebook.title}</h3>
-              <div className="flex items-center text-gray-500 text-sm mt-4">
-                <span>{notebook.date}</span>
-                <span className="mx-2">•</span>
-                <span>{notebook.sources} sources</span>
-              </div>
-            </Link>
+            <NotebookCard 
+              key={notebook.id} 
+              notebook={notebook} 
+              onDelete={handleDeleteNotebook} 
+            />
           ))}
         </div>
       ) : (
@@ -196,6 +305,7 @@ export default function Dashboard() {
       <NotebookModal 
         isOpen={isModalOpen} 
         onClose={handleModalClose} 
+        onSuccess={() => fetchNotebooks()} 
       />
     </div>
   );

@@ -9,13 +9,14 @@ from src.utils.logging import logger
 from typing import List  # Added import
 
 class RAGSystem:
-    def __init__(self, model_name: str = "llama-3.3-70b-versatile"):
+    def __init__(self, model_name: str = "llama-3.3-70b-versatile", session_id: str = None, chunk_size: int = 1000, chunk_overlap: int = 200):
         self.embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=Config.GOOGLE_API_KEY)
-        self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
         self.vector_store = None
         self.model_manager = ModelManager()
         self.llm = self.model_manager.get_model(model_name)
         self.document_metadata = []
+        self.session_id = session_id
 
     async def ingest_documents(self, documents: List["ProcessingResult"]):
         if not documents:

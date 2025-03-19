@@ -1,2 +1,61 @@
 2025-03-19 15:25:57,503 - INFO - Processing tmp\to-creating-tools-with-smolagents.pdf (application/pdf)
 2025-03-19 15:29:29,976 - INFO - Session a256adff-39a2-425f-a388-73fa394140bc created with 0 documents
+2025-03-19 15:41:05,636 - INFO - Processing tmp\to-creating-tools-with-smolagents.pdf (application/pdf)
+2025-03-19 15:41:59,102 - INFO - Session 6809b7b2-c66b-4a9e-817b-8af353ab0f0c created with 0 documents
+2025-03-19 15:49:38,301 - INFO - Processing tmp\to-creating-tools-with-smolagents.pdf (application/pdf)
+2025-03-19 15:50:25,789 - INFO - Session ff0a28c1-da54-4d7a-9549-2491aa174075 created with 0 documents
+2025-03-19 15:50:27,957 - ERROR - Error listing sessions: 'RAGSystem' object has no attribute 'model_name'
+2025-03-19 16:00:17,865 - INFO - Processing tmp\to-creating-tools-with-smolagents.pdf (application/pdf)
+2025-03-19 16:01:05,960 - INFO - Session 51e65be7-6a3d-4941-93af-42ef17a342d4 created with 0 documents
+2025-03-19 16:20:49,147 - INFO - Processing tmp\to-creating-tools-with-smolagents.pdf (application/pdf)
+2025-03-19 16:21:36,062 - INFO - Session c97273c3-0abb-42d6-9e8a-938ab8d59d1d created with 0 documents
+2025-03-19 16:29:40,160 - INFO - Session 51e65be7-6a3d-4941-93af-42ef17a342d4 deleted
+2025-03-19 16:29:45,320 - INFO - Session c97273c3-0abb-42d6-9e8a-938ab8d59d1d deleted
+2025-03-19 16:30:20,574 - INFO - Processing tmp\to-creating-tools-with-smolagents.pdf (application/pdf)
+2025-03-19 16:31:07,478 - INFO - Session 42ce1428-a8e5-47b2-be6d-367652980ce2 created with 0 documents
+2025-03-19 16:55:45,025 - INFO - Processing tmp\ENQUIRY.pdf (application/pdf)
+2025-03-19 16:56:04,103 - ERROR - Session creation failed: RAGSystem.__init__() got an unexpected keyword argument 'session_id'
+2025-03-19 17:01:33,121 - INFO - Processing tmp\plain_text_cc23d526-6658-4711-97c8-daba1dc417cf.txt (text/plain)
+2025-03-19 17:01:33,129 - ERROR - Session creation failed: RAGSystem.__init__() got an unexpected keyword argument 'session_id'
+2025-03-19 17:07:35,945 - INFO - Processing tmp\plain_text_20559b8f-88c2-470f-903e-d6c8e3a57cc7.txt (text/plain)
+2025-03-19 17:07:35,952 - ERROR - Session creation failed: RAGSystem.__init__() got an unexpected keyword argument 'session_id'
+2025-03-19 17:26:03,860 - INFO - Processing tmp\plain_text_752b1d29-88a6-4ad5-bfbb-35484c3bd583.txt (text/plain)
+2025-03-19 17:26:07,543 - ERROR - Session creation failed: Error embedding content: 400 API key not valid. Please pass a valid API key. [reason: "API_KEY_INVALID"
+domain: "googleapis.com"
+metadata {
+  key: "service"
+  value: "generativelanguage.googleapis.com"
+}
+, locale: "en-US"
+message: "API key not valid. Please pass a valid API key."
+]
+2025-03-19 17:27:36,562 - INFO - Processing tmp\plain_text_feb95f56-4c02-4802-9c3d-ba0d38199e7f.txt (text/plain)
+2025-03-19 17:27:37,640 - ERROR - Session creation failed: Error embedding content: 400 API key not valid. Please pass a valid API key. [reason: "API_KEY_INVALID"
+domain: "googleapis.com"
+metadata {
+  key: "service"
+  value: "generativelanguage.googleapis.com"
+}
+, locale: "en-US"
+message: "API key not valid. Please pass a valid API key."
+]
+2025-03-19 17:31:17,383 - INFO - Processing tmp\plain_text_6307249c-bdf2-4cf2-b425-acb57713cff6.txt (text/plain)
+2025-03-19 17:31:19,907 - ERROR - Session creation failed: Error embedding content: 400 API key not valid. Please pass a valid API key. [reason: "API_KEY_INVALID"
+domain: "googleapis.com"
+metadata {
+  key: "service"
+  value: "generativelanguage.googleapis.com"
+}
+, locale: "en-US"
+message: "API key not valid. Please pass a valid API key."
+]
+2025-03-19 17:32:28,506 - INFO - Processing tmp\plain_text_04ca6204-3ab5-43db-ac3d-d3e986b7e02b.txt (text/plain)
+2025-03-19 17:32:31,601 - ERROR - Session creation failed: Error embedding content: 400 API key not valid. Please pass a valid API key. [reason: "API_KEY_INVALID"
+domain: "googleapis.com"
+metadata {
+  key: "service"
+  value: "generativelanguage.googleapis.com"
+}
+, locale: "en-US"
+message: "API key not valid. Please pass a valid API key."
+]
