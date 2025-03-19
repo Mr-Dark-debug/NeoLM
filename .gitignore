@@ -41,6 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 # backend
+/backend/tmp
 /backend/tmp/*
 /backend/venv/
 /backend/venv/*
