@@ -59,3 +59,7 @@ metadata {
 , locale: "en-US"
 message: "API key not valid. Please pass a valid API key."
 ]
+2025-03-19 17:35:33,222 - INFO - Processing tmp\plain_text_ad8f6af3-80c0-4e8a-b718-4ead1337a926.txt (text/plain)
+2025-03-19 17:35:36,537 - INFO - Ingested 1 document chunks
+2025-03-19 17:35:36,537 - INFO - Session f09717c6-f638-4160-b4db-5938cdcb39ad created with 1 documents
+2025-03-19 17:37:49,714 - INFO - Session 54aacee7-133d-49dc-b706-d80fd8508d7b created with 0 documents
